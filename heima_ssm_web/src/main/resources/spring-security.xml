@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/security
+        http://www.springframework.org/schema/security/spring-security.xsd">
+    <!--排除登陆相关及其他效果静态资源-->
+    <security:http security="none" pattern="/css/**"/>
+    <security:http security="none" pattern="/img/**"/>
+    <security:http security="none" pattern="/plugins/**"/>
+    <security:http security="none" pattern="/pages/login.jsp"/>
+    <security:http security="none" pattern="/pages/failer.jsp"/>
+
+    <security:http auto-config="true" use-expressions="true">
+        <!--拦截请求的资源以及放行的用户角色-->
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER','ROLE_ADMIN')"/>
+        <!--配置自定义登录页面-->
+        <security:form-login
+            login-page="/pages/login.jsp"
+            login-processing-url="/login.do"
+            username-parameter="username"
+            password-parameter="password"
+            default-target-url="/index.jsp"
+            authentication-failure-url="/pages/failer.jsp"
+            />
+        <!--关闭crsf-->
+        <security:csrf disabled="true"/>
+        <!--用户注销-->
+        <security:logout invalidate-session="true" logout-url="/logout.do" logout-success-url="/pages/login.jsp"/>
+    </security:http>
+    <!--配置认证管理器-->
+    <security:authentication-manager>
+        <!--指定userService的BeanId，通过Service获取数据库存储的用户角色-->
+        <security:authentication-provider user-service-ref="userService">
+            <!--指定加密方式(用于登陆时使用何种方式将密文进行解密)-->
+            <security:password-encoder ref="passwordEncoder"/>
+        </security:authentication-provider>
+    </security:authentication-manager>
+    <!--配置加密类-->
+    <bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+</beans>
